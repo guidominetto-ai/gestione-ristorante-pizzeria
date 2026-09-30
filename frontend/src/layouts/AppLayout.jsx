@@ -1,27 +1,10 @@
 import { Outlet } from 'react-router-dom'
+import Sidebar from '../components/navigation/Sidebar'
 
 function AppLayout() {
   return (
     <div className="app-layout">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <span className="sidebar-brand-small">GESTIONE</span>
-          <strong>Ristorante & Pizzeria</strong>
-        </div>
-
-        <nav className="sidebar-navigation">
-          <span>Dashboard</span>
-          <span>Cassa</span>
-          <span>Sala</span>
-          <span>Comande</span>
-          <span>Prenotazioni</span>
-          <span>Clienti</span>
-          <span>Menu</span>
-          <span>Magazzino</span>
-          <span>HACCP</span>
-          <span>Report</span>
-        </nav>
-      </aside>
+      <Sidebar />
 
       <div className="app-main">
         <header className="app-header">
