@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from '../layouts/AppLayout'
 import Dashboard from '../pages/Dashboard'
 import ModulePlaceholder from '../components/ModulePlaceholder'
+import Sala from '../pages/Sala'
 
 function AppRoutes() {
   return (
@@ -22,16 +23,7 @@ function AppRoutes() {
             }
           />
 
-          <Route
-            path="sala"
-            element={
-              <ModulePlaceholder
-                eyebrow="Sala"
-                title="Sala"
-                description="Mappa tavoli, occupazione, gruppi e sessioni di servizio."
-              />
-            }
-          />
+          <Route path="sala" element={<Sala />} />
 
           <Route
             path="comande"
