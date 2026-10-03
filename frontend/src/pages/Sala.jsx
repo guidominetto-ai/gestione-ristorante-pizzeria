@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, X } from 'lucide-react'
+import { Users, X, ArrowLeft } from 'lucide-react'
 
 const demoTables = [
   { id: 1, number: '1', seats: 2, status: 'free' },
@@ -12,6 +12,12 @@ const demoTables = [
   { id: 8, number: '8', seats: 6, status: 'reserved', reservation: '22:00' },
 ]
 
+const demoWaiters = [
+  { id: 1, name: 'Cameriere 1' },
+  { id: 2, name: 'Cameriere 2' },
+  { id: 3, name: 'Capo sala' },
+]
+
 const statusLabels = {
   free: 'Libero',
   occupied: 'Occupato',
@@ -20,6 +26,57 @@ const statusLabels = {
 
 function Sala() {
   const [selectedTable, setSelectedTable] = useState(null)
+  const [openingTable, setOpeningTable] = useState(false)
+  const [covers, setCovers] = useState(1)
+  const [waiterId, setWaiterId] = useState('')
+
+  const selectTable = (table) => {
+    setSelectedTable(table)
+    setOpeningTable(false)
+    setCovers(1)
+    setWaiterId('')
+  }
+
+  const closeDetails = () => {
+    setSelectedTable(null)
+    setOpeningTable(false)
+    setCovers(1)
+    setWaiterId('')
+  }
+
+  const startOpeningTable = () => {
+    setCovers(1)
+    setWaiterId('')
+    setOpeningTable(true)
+  }
+
+  const cancelOpeningTable = () => {
+    setOpeningTable(false)
+    setCovers(1)
+    setWaiterId('')
+  }
+
+  const confirmOpeningTable = (event) => {
+    event.preventDefault()
+
+    if (!selectedTable || !waiterId) {
+      return
+    }
+
+    const waiter = demoWaiters.find(
+      (item) => item.id === Number(waiterId),
+    )
+
+    console.log('TableSession demo', {
+      tableId: selectedTable.id,
+      tableNumber: selectedTable.number,
+      covers: Number(covers),
+      waiterId: Number(waiterId),
+      waiterName: waiter?.name,
+    })
+
+    setOpeningTable(false)
+  }
 
   return (
     <section>
@@ -98,9 +155,11 @@ function Sala() {
                 type="button"
                 className={
                   `restaurant-table table-${table.status}` +
-                  (selectedTable?.id === table.id ? ' restaurant-table-selected' : '')
+                  (selectedTable?.id === table.id
+                    ? ' restaurant-table-selected'
+                    : '')
                 }
-                onClick={() => setSelectedTable(table)}
+                onClick={() => selectTable(table)}
               >
                 <span className="table-number">{table.number}</span>
 
@@ -127,70 +186,159 @@ function Sala() {
               <button
                 type="button"
                 className="table-detail-close"
-                onClick={() => setSelectedTable(null)}
+                onClick={closeDetails}
                 aria-label="Chiudi dettagli tavolo"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className={`table-detail-status detail-${selectedTable.status}`}>
-              {statusLabels[selectedTable.status]}
-            </div>
-
-            <div className="table-detail-info">
-              <div>
-                <span>Capienza</span>
-                <strong>
-                  <Users size={17} />
-                  {selectedTable.seats} posti
-                </strong>
-              </div>
-
-              {selectedTable.status === 'occupied' && (
-                <div>
-                  <span>Coperti presenti</span>
-                  <strong>{selectedTable.covers}</strong>
+            {!openingTable ? (
+              <>
+                <div
+                  className={`table-detail-status detail-${selectedTable.status}`}
+                >
+                  {statusLabels[selectedTable.status]}
                 </div>
-              )}
 
-              {selectedTable.status === 'reserved' && (
-                <div>
-                  <span>Prossima prenotazione</span>
-                  <strong>{selectedTable.reservation}</strong>
+                <div className="table-detail-info">
+                  <div>
+                    <span>Capienza</span>
+                    <strong>
+                      <Users size={17} />
+                      {selectedTable.seats} posti
+                    </strong>
+                  </div>
+
+                  {selectedTable.status === 'occupied' && (
+                    <div>
+                      <span>Coperti presenti</span>
+                      <strong>{selectedTable.covers}</strong>
+                    </div>
+                  )}
+
+                  {selectedTable.status === 'reserved' && (
+                    <div>
+                      <span>Prossima prenotazione</span>
+                      <strong>{selectedTable.reservation}</strong>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="table-detail-actions">
-              {selectedTable.status === 'free' && (
-                <button type="button" className="primary-action">
-                  Apri tavolo
+                <div className="table-detail-actions">
+                  {selectedTable.status === 'free' && (
+                    <button
+                      type="button"
+                      className="primary-action"
+                      onClick={startOpeningTable}
+                    >
+                      Apri tavolo
+                    </button>
+                  )}
+
+                  {selectedTable.status === 'occupied' && (
+                    <>
+                      <button type="button" className="primary-action">
+                        Apri comanda
+                      </button>
+
+                      <button type="button" className="secondary-action">
+                        Dettagli servizio
+                      </button>
+                    </>
+                  )}
+
+                  {selectedTable.status === 'reserved' && (
+                    <>
+                      <button type="button" className="primary-action">
+                        Vedi prenotazione
+                      </button>
+
+                      <button type="button" className="secondary-action">
+                        Registra arrivo
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <form
+                className="table-opening-form"
+                onSubmit={confirmOpeningTable}
+              >
+                <button
+                  type="button"
+                  className="table-opening-back"
+                  onClick={cancelOpeningTable}
+                >
+                  <ArrowLeft size={17} />
+                  Torna ai dettagli
                 </button>
-              )}
 
-              {selectedTable.status === 'occupied' && (
-                <>
-                  <button type="button" className="primary-action">
-                    Apri comanda
-                  </button>
-                  <button type="button" className="secondary-action">
-                    Dettagli servizio
-                  </button>
-                </>
-              )}
+                <div className="table-opening-heading">
+                  <span>Apertura tavolo</span>
+                  <h3>Tavolo {selectedTable.number}</h3>
+                  <p>
+                    Inserisci i dati iniziali del servizio.
+                  </p>
+                </div>
 
-              {selectedTable.status === 'reserved' && (
-                <>
-                  <button type="button" className="primary-action">
-                    Vedi prenotazione
+                <label className="table-form-field">
+                  <span>Coperti</span>
+
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedTable.seats}
+                    value={covers}
+                    onChange={(event) => setCovers(event.target.value)}
+                    required
+                  />
+
+                  <small>
+                    Capienza tavolo: {selectedTable.seats} posti
+                  </small>
+                </label>
+
+                <label className="table-form-field">
+                  <span>Cameriere responsabile</span>
+
+                  <select
+                    value={waiterId}
+                    onChange={(event) => setWaiterId(event.target.value)}
+                    required
+                  >
+                    <option value="">
+                      Seleziona cameriere
+                    </option>
+
+                    {demoWaiters.map((waiter) => (
+                      <option key={waiter.id} value={waiter.id}>
+                        {waiter.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="table-detail-actions">
+                  <button
+                    type="submit"
+                    className="primary-action"
+                    disabled={!waiterId}
+                  >
+                    Conferma apertura
                   </button>
-                  <button type="button" className="secondary-action">
-                    Registra arrivo
+
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={cancelOpeningTable}
+                  >
+                    Annulla
                   </button>
-                </>
-              )}
-            </div>
+                </div>
+              </form>
+            )}
           </aside>
         )}
       </div>
