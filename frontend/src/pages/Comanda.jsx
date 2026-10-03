@@ -8,7 +8,10 @@ import {
   Users,
 } from 'lucide-react'
 import { useState } from 'react'
-
+import {
+  ORDER_LINE_STATUS_LABELS,
+  useOrders,
+} from '../context/OrderContext'
 const demoCategories = [
   'Antipasti',
   'Pizze',
@@ -79,14 +82,30 @@ const demoMenu = [
 ]
 
 function Comanda() {
+    const {
+    sentBatches: allSentBatches,
+    sendOrderBatch,
+  } = useOrders()
   const location = useLocation()
   const navigate = useNavigate()
 
   const tableSession = location.state?.tableSession ?? null
 
+    const sentBatches = tableSession
+    ? allSentBatches
+        .filter(
+          (batch) =>
+            batch.tableSession.tableId === tableSession.tableId,
+        )
+        .map((batch, index) => ({
+          ...batch,
+          sequence: index + 1,
+        }))
+    : []
+
   const [category, setCategory] = useState('Pizze')
   const [items, setItems] = useState([])
-  const [sentBatches, setSentBatches] = useState([])
+  
 
   const visibleMenu = demoMenu.filter(
     (item) => item.category === category,
@@ -163,36 +182,20 @@ function Comanda() {
     0,
   )
 
-  const sendOrder = () => {
+    const sendOrder = () => {
     if (!tableSession || items.length === 0) {
       return
     }
 
-    const now = new Date()
-
-    const newBatch = {
-      id: `batch-${Date.now()}`,
-      sequence: sentBatches.length + 1,
-      sentAt: now.toLocaleTimeString('it-IT', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      status: 'sent',
-      items: items.map((item) => ({
-        ...item,
-        lineId: `line-${item.id}-${Date.now()}`,
-        status: 'waiting',
-      })),
-    }
-
-    setSentBatches((currentBatches) => [
-      ...currentBatches,
-      newBatch,
-    ])
+    sendOrderBatch({
+      tableSession,
+      items,
+    })
 
     setItems([])
   }
 
+    
   if (!tableSession) {
     return (
       <section>
@@ -300,7 +303,7 @@ function Comanda() {
                       <strong>Invio #{batch.sequence}</strong>
                     </div>
 
-                    <span>{batch.sentAt}</span>
+                    <span>{batch.sentTime}</span>
                   </div>
 
                   {batch.items.map((item) => (
@@ -321,7 +324,9 @@ function Comanda() {
                         </span>
                       </div>
 
-                      <span>In attesa</span>
+                      <span>
+  {ORDER_LINE_STATUS_LABELS[item.status]}
+</span>
                     </div>
                   ))}
                 </div>

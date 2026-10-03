@@ -1,33 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, X, ArrowLeft } from 'lucide-react'
+import { useOrders } from '../context/OrderContext'
 
-const initialTables = [
-  { id: 1, number: '1', seats: 2, status: 'free' },
-  { id: 2, number: '2', seats: 2, status: 'free' },
-  {
-    id: 3,
-    number: '3',
-    seats: 4,
-    status: 'occupied',
-    covers: 3,
-    waiterId: 1,
-    waiterName: 'Cameriere 1',
-  },
-  { id: 4, number: '4', seats: 4, status: 'reserved', reservation: '20:30' },
-  { id: 5, number: '5', seats: 4, status: 'free' },
-  {
-    id: 6,
-    number: '6',
-    seats: 6,
-    status: 'occupied',
-    covers: 5,
-    waiterId: 2,
-    waiterName: 'Cameriere 2',
-  },
-  { id: 7, number: '7', seats: 2, status: 'free' },
-  { id: 8, number: '8', seats: 6, status: 'reserved', reservation: '22:00' },
-]
+
 
 const demoWaiters = [
   { id: 1, name: 'Cameriere 1' },
@@ -42,8 +18,9 @@ const statusLabels = {
 }
 
 function Sala() {
-      const navigate = useNavigate()
-  const [tables, setTables] = useState(initialTables)
+  const navigate = useNavigate()
+  const { tables, setTables } = useOrders()
+
   const [selectedTableId, setSelectedTableId] = useState(null)
   const [openingTable, setOpeningTable] = useState(false)
   const [covers, setCovers] = useState(1)
