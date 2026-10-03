@@ -1,13 +1,29 @@
 import { useState } from 'react'
 import { Users, X, ArrowLeft } from 'lucide-react'
 
-const demoTables = [
+const initialTables = [
   { id: 1, number: '1', seats: 2, status: 'free' },
   { id: 2, number: '2', seats: 2, status: 'free' },
-  { id: 3, number: '3', seats: 4, status: 'occupied', covers: 3 },
+  {
+    id: 3,
+    number: '3',
+    seats: 4,
+    status: 'occupied',
+    covers: 3,
+    waiterId: 1,
+    waiterName: 'Cameriere 1',
+  },
   { id: 4, number: '4', seats: 4, status: 'reserved', reservation: '20:30' },
   { id: 5, number: '5', seats: 4, status: 'free' },
-  { id: 6, number: '6', seats: 6, status: 'occupied', covers: 5 },
+  {
+    id: 6,
+    number: '6',
+    seats: 6,
+    status: 'occupied',
+    covers: 5,
+    waiterId: 2,
+    waiterName: 'Cameriere 2',
+  },
   { id: 7, number: '7', seats: 2, status: 'free' },
   { id: 8, number: '8', seats: 6, status: 'reserved', reservation: '22:00' },
 ]
@@ -25,20 +41,36 @@ const statusLabels = {
 }
 
 function Sala() {
-  const [selectedTable, setSelectedTable] = useState(null)
+  const [tables, setTables] = useState(initialTables)
+  const [selectedTableId, setSelectedTableId] = useState(null)
   const [openingTable, setOpeningTable] = useState(false)
   const [covers, setCovers] = useState(1)
   const [waiterId, setWaiterId] = useState('')
 
+  const selectedTable =
+    tables.find((table) => table.id === selectedTableId) ?? null
+
+  const freeTables = tables.filter((table) => table.status === 'free').length
+  const occupiedTables = tables.filter(
+    (table) => table.status === 'occupied',
+  ).length
+  const reservedTables = tables.filter(
+    (table) => table.status === 'reserved',
+  ).length
+
+  const availableCovers = tables
+    .filter((table) => table.status === 'free')
+    .reduce((total, table) => total + table.seats, 0)
+
   const selectTable = (table) => {
-    setSelectedTable(table)
+    setSelectedTableId(table.id)
     setOpeningTable(false)
     setCovers(1)
     setWaiterId('')
   }
 
   const closeDetails = () => {
-    setSelectedTable(null)
+    setSelectedTableId(null)
     setOpeningTable(false)
     setCovers(1)
     setWaiterId('')
@@ -63,19 +95,42 @@ function Sala() {
       return
     }
 
+    const numericCovers = Number(covers)
+    const numericWaiterId = Number(waiterId)
+
+    if (
+      !Number.isInteger(numericCovers) ||
+      numericCovers < 1 ||
+      numericCovers > selectedTable.seats
+    ) {
+      return
+    }
+
     const waiter = demoWaiters.find(
-      (item) => item.id === Number(waiterId),
+      (item) => item.id === numericWaiterId,
     )
 
-    console.log('TableSession demo', {
-      tableId: selectedTable.id,
-      tableNumber: selectedTable.number,
-      covers: Number(covers),
-      waiterId: Number(waiterId),
-      waiterName: waiter?.name,
-    })
+    if (!waiter) {
+      return
+    }
+
+    setTables((currentTables) =>
+      currentTables.map((table) =>
+        table.id === selectedTable.id
+          ? {
+              ...table,
+              status: 'occupied',
+              covers: numericCovers,
+              waiterId: waiter.id,
+              waiterName: waiter.name,
+            }
+          : table,
+      ),
+    )
 
     setOpeningTable(false)
+    setCovers(1)
+    setWaiterId('')
   }
 
   return (
@@ -98,27 +153,27 @@ function Sala() {
       <div className="room-summary">
         <div className="summary-item">
           <span>Tavoli</span>
-          <strong>8</strong>
+          <strong>{tables.length}</strong>
         </div>
 
         <div className="summary-item">
           <span>Liberi</span>
-          <strong>4</strong>
+          <strong>{freeTables}</strong>
         </div>
 
         <div className="summary-item">
           <span>Occupati</span>
-          <strong>2</strong>
+          <strong>{occupiedTables}</strong>
         </div>
 
         <div className="summary-item">
           <span>Prenotati</span>
-          <strong>2</strong>
+          <strong>{reservedTables}</strong>
         </div>
 
         <div className="summary-item">
           <span>Coperti disponibili</span>
-          <strong>30</strong>
+          <strong>{availableCovers}</strong>
         </div>
       </div>
 
@@ -149,7 +204,7 @@ function Sala() {
           </div>
 
           <div className="table-map">
-            {demoTables.map((table) => (
+            {tables.map((table) => (
               <button
                 key={table.id}
                 type="button"
@@ -211,10 +266,17 @@ function Sala() {
                   </div>
 
                   {selectedTable.status === 'occupied' && (
-                    <div>
-                      <span>Coperti presenti</span>
-                      <strong>{selectedTable.covers}</strong>
-                    </div>
+                    <>
+                      <div>
+                        <span>Coperti presenti</span>
+                        <strong>{selectedTable.covers}</strong>
+                      </div>
+
+                      <div>
+                        <span>Cameriere responsabile</span>
+                        <strong>{selectedTable.waiterName}</strong>
+                      </div>
+                    </>
                   )}
 
                   {selectedTable.status === 'reserved' && (
@@ -278,9 +340,7 @@ function Sala() {
                 <div className="table-opening-heading">
                   <span>Apertura tavolo</span>
                   <h3>Tavolo {selectedTable.number}</h3>
-                  <p>
-                    Inserisci i dati iniziali del servizio.
-                  </p>
+                  <p>Inserisci i dati iniziali del servizio.</p>
                 </div>
 
                 <label className="table-form-field">
@@ -308,9 +368,7 @@ function Sala() {
                     onChange={(event) => setWaiterId(event.target.value)}
                     required
                   >
-                    <option value="">
-                      Seleziona cameriere
-                    </option>
+                    <option value="">Seleziona cameriere</option>
 
                     {demoWaiters.map((waiter) => (
                       <option key={waiter.id} value={waiter.id}>
