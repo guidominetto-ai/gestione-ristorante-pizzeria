@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-
+import KdsPizzeria from '../pages/KdsPizzeria'
 import AppLayout from '../layouts/AppLayout'
 import Dashboard from '../pages/Dashboard'
 import ModulePlaceholder from '../components/ModulePlaceholder'
@@ -28,6 +28,8 @@ function AppRoutes() {
           <Route path="sala" element={<Sala />} />
 
           <Route path="comande" element={<Comanda />} />
+
+          <Route path="kds/pizzeria" element={<KdsPizzeria />} />
 
           <Route
             path="prenotazioni"

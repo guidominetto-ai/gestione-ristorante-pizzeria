@@ -10,6 +10,7 @@ import {
   Warehouse,
   ShieldCheck,
   ChartNoAxesCombined,
+  ChefHat,
 } from 'lucide-react'
 
 const navigationItems = [
@@ -34,6 +35,11 @@ const navigationItems = [
     path: '/comande',
     icon: ClipboardList,
   },
+  {
+  label: 'KDS Pizzeria',
+  path: '/kds/pizzeria',
+  icon: ChefHat,
+},
   {
     label: 'Prenotazioni',
     path: '/prenotazioni',
