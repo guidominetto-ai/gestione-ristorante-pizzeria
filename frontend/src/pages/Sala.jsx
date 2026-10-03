@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Users, X, ArrowLeft } from 'lucide-react'
 
 const initialTables = [
@@ -41,6 +42,7 @@ const statusLabels = {
 }
 
 function Sala() {
+      const navigate = useNavigate()
   const [tables, setTables] = useState(initialTables)
   const [selectedTableId, setSelectedTableId] = useState(null)
   const [openingTable, setOpeningTable] = useState(false)
@@ -300,9 +302,25 @@ function Sala() {
 
                   {selectedTable.status === 'occupied' && (
                     <>
-                      <button type="button" className="primary-action">
-                        Apri comanda
-                      </button>
+                      <button
+  type="button"
+  className="primary-action"
+  onClick={() =>
+    navigate('/comande', {
+      state: {
+        tableSession: {
+          tableId: selectedTable.id,
+          tableNumber: selectedTable.number,
+          covers: selectedTable.covers,
+          waiterId: selectedTable.waiterId,
+          waiterName: selectedTable.waiterName,
+        },
+      },
+    })
+  }
+>
+  Apri comanda
+</button>
 
                       <button type="button" className="secondary-action">
                         Dettagli servizio

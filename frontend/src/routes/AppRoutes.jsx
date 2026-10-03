@@ -4,6 +4,8 @@ import AppLayout from '../layouts/AppLayout'
 import Dashboard from '../pages/Dashboard'
 import ModulePlaceholder from '../components/ModulePlaceholder'
 import Sala from '../pages/Sala'
+import Comanda from '../pages/Comanda'
+
 
 function AppRoutes() {
   return (
@@ -25,16 +27,7 @@ function AppRoutes() {
 
           <Route path="sala" element={<Sala />} />
 
-          <Route
-            path="comande"
-            element={
-              <ModulePlaceholder
-                eyebrow="Produzione"
-                title="Comande"
-                description="Gestione delle comande e del loro avanzamento."
-              />
-            }
-          />
+          <Route path="comande" element={<Comanda />} />
 
           <Route
             path="prenotazioni"
