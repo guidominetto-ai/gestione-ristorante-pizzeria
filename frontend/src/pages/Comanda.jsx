@@ -1,5 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Minus, Plus, Send, Users } from 'lucide-react'
+import {
+  ArrowLeft,
+  Check,
+  Minus,
+  Plus,
+  Send,
+  Users,
+} from 'lucide-react'
 import { useState } from 'react'
 
 const demoCategories = [
@@ -79,6 +86,7 @@ function Comanda() {
 
   const [category, setCategory] = useState('Pizze')
   const [items, setItems] = useState([])
+  const [sentBatches, setSentBatches] = useState([])
 
   const visibleMenu = demoMenu.filter(
     (item) => item.category === category,
@@ -132,8 +140,26 @@ function Comanda() {
     )
   }
 
-  const total = items.reduce(
+  const draftTotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
+    0,
+  )
+
+  const sentTotal = sentBatches.reduce(
+    (batchSum, batch) =>
+      batchSum +
+      batch.items.reduce(
+        (itemSum, item) =>
+          itemSum + item.price * item.quantity,
+        0,
+      ),
+    0,
+  )
+
+  const orderTotal = sentTotal + draftTotal
+
+  const draftQuantity = items.reduce(
+    (sum, item) => sum + item.quantity,
     0,
   )
 
@@ -142,11 +168,29 @@ function Comanda() {
       return
     }
 
-    console.log('Order batch demo', {
-      tableSession,
-      items,
-      total,
-    })
+    const now = new Date()
+
+    const newBatch = {
+      id: `batch-${Date.now()}`,
+      sequence: sentBatches.length + 1,
+      sentAt: now.toLocaleTimeString('it-IT', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      status: 'sent',
+      items: items.map((item) => ({
+        ...item,
+        lineId: `line-${item.id}-${Date.now()}`,
+        status: 'waiting',
+      })),
+    }
+
+    setSentBatches((currentBatches) => [
+      ...currentBatches,
+      newBatch,
+    ])
+
+    setItems([])
   }
 
   if (!tableSession) {
@@ -202,8 +246,8 @@ function Comanda() {
         </div>
 
         <div className="order-total">
-          <span>Totale comanda</span>
-          <strong>€ {total.toFixed(2)}</strong>
+          <span>Totale ordine</span>
+          <strong>€ {orderTotal.toFixed(2)}</strong>
         </div>
       </div>
 
@@ -240,27 +284,68 @@ function Comanda() {
               </button>
             ))}
           </div>
+
+          {sentBatches.length > 0 && (
+            <div className="sent-batches">
+              <div className="sent-batches-heading">
+                <span>Storico invii</span>
+                <strong>{sentBatches.length}</strong>
+              </div>
+
+              {sentBatches.map((batch) => (
+                <div key={batch.id} className="sent-batch">
+                  <div className="sent-batch-header">
+                    <div>
+                      <Check size={17} />
+                      <strong>Invio #{batch.sequence}</strong>
+                    </div>
+
+                    <span>{batch.sentAt}</span>
+                  </div>
+
+                  {batch.items.map((item) => (
+                    <div
+                      key={item.lineId}
+                      className="sent-order-line"
+                    >
+                      <div>
+                        <strong>
+                          {item.quantity} × {item.name}
+                        </strong>
+
+                        <span>
+                          {item.station}
+                          {item.note
+                            ? ` · Nota: ${item.note}`
+                            : ''}
+                        </span>
+                      </div>
+
+                      <span>In attesa</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <aside className="current-order">
           <div className="current-order-header">
             <div>
-              <span>Comanda corrente</span>
+              <span>Nuovo invio</span>
               <h2>Tavolo {tableSession.tableNumber}</h2>
             </div>
 
             <strong>
-              {items.reduce(
-                (sum, item) => sum + item.quantity,
-                0,
-              )}{' '}
-              articoli
+              {draftQuantity}{' '}
+              {draftQuantity === 1 ? 'articolo' : 'articoli'}
             </strong>
           </div>
 
           {items.length === 0 ? (
             <div className="empty-order">
-              <p>Nessun articolo inserito.</p>
+              <p>Nessun articolo da inviare.</p>
               <span>
                 Seleziona una categoria e aggiungi i piatti.
               </span>
@@ -289,6 +374,7 @@ function Comanda() {
                         onClick={() =>
                           changeQuantity(item.id, -1)
                         }
+                        aria-label={`Riduci ${item.name}`}
                       >
                         <Minus size={16} />
                       </button>
@@ -300,6 +386,7 @@ function Comanda() {
                         onClick={() =>
                           changeQuantity(item.id, 1)
                         }
+                        aria-label={`Aumenta ${item.name}`}
                       >
                         <Plus size={16} />
                       </button>
@@ -322,9 +409,16 @@ function Comanda() {
 
           <div className="order-footer">
             <div className="order-footer-total">
-              <span>Totale</span>
-              <strong>€ {total.toFixed(2)}</strong>
+              <span>Nuovo invio</span>
+              <strong>€ {draftTotal.toFixed(2)}</strong>
             </div>
+
+            {sentBatches.length > 0 && (
+              <div className="order-footer-total">
+                <span>Già inviato</span>
+                <strong>€ {sentTotal.toFixed(2)}</strong>
+              </div>
+            )}
 
             <button
               type="button"
